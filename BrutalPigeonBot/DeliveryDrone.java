@@ -5,6 +5,70 @@ import java.util.*;
 
 public class DeliveryDrone extends RobotPlayer{
 	static void runDeliveryDrone() throws GameActionException {
+        if (turnCount == 1) {
+            int number = rc.getRoundNum();
+            for (int i = 2; i <= 700; i++) {
+                if (number <= i) break;
+                Transaction[] tr = rc.getBlock(number - i);
+                for (Transaction t : tr) {
+                    int[] message = t.getMessage();
+                    if (message[5] == sec1 && message[6] == sec2) {
+                        if (message[0] == 2) {
+                            HQLoc = new MapLocation(message[1] - sec3, message[2] - sec4);
+                            knowHQ = true;
+                            for (Direction dir : directions){
+                                MapLocation nLoc = HQLoc.add(dir);
+                                if(valid(nLoc)) bad[nLoc.x][nLoc.y] = true;
+                            }
+                        }
+                        else if(message[0] == 15){ //the location of their HQ
+                            theirHQLoc = new MapLocation(message[1] - sec3, message[2] - sec4);
+                            knowTheirHQ = true;
+                        }
+                        else if(message[0] == 30) taken[message[1] - sec3][message[2] - sec4] = true;
+                        else if(message[0] == 27){
+                            haveRequest = true;
+                            land.add(new MapLocation(message[1] - sec3, message[2] - sec4));
+                        }
+                    } else {
+                        numMess++;
+                        averageEnemyMessageCost = (averageEnemyMessageCost + t.getCost()) / numMess;
+                    }
+                }
+            }
+        }
+        for (int i = 1; i <= 1; i++) {
+            if (rc.getRoundNum() <= i) break;
+            Transaction[] tr = rc.getBlock(rc.getRoundNum() - i);
+            for (Transaction t : tr) {
+                int[] message = t.getMessage();
+                if (message[5] == sec1 && message[6] == sec2) {
+                    if (message[0] == 2) {
+                        HQLoc = new MapLocation(message[1] - sec3, message[2] - sec4);
+                        knowHQ = true;
+                        for (Direction dir : directions) {
+                            MapLocation nLoc = HQLoc.add(dir);
+                            if(valid(nLoc)) bad[nLoc.x][nLoc.y] = true;
+                        }
+                    }
+                    else if(message[0] == 15){ //the location of their HQ
+                        theirHQLoc = new MapLocation(message[1] - sec3, message[2] - sec4);
+                        knowTheirHQ = true;
+                    }
+                    else if(message[0] == 16){
+                        lastWait = rc.getRoundNum();
+                    }
+                    else if(message[0] == 30) taken[message[1] - sec3][message[2] - sec4] = true;
+                    else if(message[0] == 27){
+                        haveRequest = true;
+                        land.add(new MapLocation(message[1] - sec3, message[2] - sec4));
+                    }
+                } else {
+                    numMess++;
+                    averageEnemyMessageCost = (averageEnemyMessageCost + t.getCost()) / numMess;
+                }
+            }
+        }
         System.out.println(DroneStatus);
         //System.out.println(knowHQ);
         if(wait && (rc.getRoundNum() - lastWait) > 20){
@@ -223,70 +287,6 @@ public class DeliveryDrone extends RobotPlayer{
                     else if(goal == theirHQLoc && knowHQ) goal = HQLoc;
                 }
                 DroneNav(goal);
-            }
-        }
-        if (turnCount == 1) {
-            int number = rc.getRoundNum();
-            for (int i = 2; i <= 700; i++) {
-                if (number <= i) break;
-                Transaction[] tr = rc.getBlock(number - i);
-                for (Transaction t : tr) {
-                    int[] message = t.getMessage();
-                    if (message[5] == sec1 && message[6] == sec2) {
-                        if (message[0] == 2) {
-                            HQLoc = new MapLocation(message[1] - sec3, message[2] - sec4);
-                            knowHQ = true;
-                            for (Direction dir : directions){
-                                MapLocation nLoc = HQLoc.add(dir);
-                                if(valid(nLoc)) bad[nLoc.x][nLoc.y] = true;
-                            }
-                        }
-                        else if(message[0] == 15){ //the location of their HQ
-                            theirHQLoc = new MapLocation(message[1] - sec3, message[2] - sec4);
-                            knowTheirHQ = true;
-                        }
-                        else if(message[0] == 30) taken[message[1] - sec3][message[2] - sec4] = true;
-                        else if(message[0] == 27){
-                            haveRequest = true;
-                            land.add(new MapLocation(message[1] - sec3, message[2] - sec4));
-                        }
-                    } else {
-                        numMess++;
-                        averageEnemyMessageCost = (averageEnemyMessageCost + t.getCost()) / numMess;
-                    }
-                }
-            }
-        }
-        for (int i = 1; i <= 1; i++) {
-            if (rc.getRoundNum() <= i) break;
-            Transaction[] tr = rc.getBlock(rc.getRoundNum() - i);
-            for (Transaction t : tr) {
-                int[] message = t.getMessage();
-                if (message[5] == sec1 && message[6] == sec2) {
-                    if (message[0] == 2) {
-                        HQLoc = new MapLocation(message[1] - sec3, message[2] - sec4);
-                        knowHQ = true;
-                        for (Direction dir : directions) {
-                            MapLocation nLoc = HQLoc.add(dir);
-                            if(valid(nLoc)) bad[nLoc.x][nLoc.y] = true;
-                        }
-                    }
-                    else if(message[0] == 15){ //the location of their HQ
-                        theirHQLoc = new MapLocation(message[1] - sec3, message[2] - sec4);
-                        knowTheirHQ = true;
-                    }
-                    else if(message[0] == 16){
-                        lastWait = rc.getRoundNum();
-                    }
-                    else if(message[0] == 30) taken[message[1] - sec3][message[2] - sec4] = true;
-                    else if(message[0] == 27){
-                        haveRequest = true;
-                        land.add(new MapLocation(message[1] - sec3, message[2] - sec4));
-                    }
-                } else {
-                    numMess++;
-                    averageEnemyMessageCost = (averageEnemyMessageCost + t.getCost()) / numMess;
-                }
             }
         }
     }

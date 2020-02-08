@@ -5,6 +5,21 @@ import java.util.*;
 
 public class DesignSchool extends RobotPlayer{
 	static void runDesignSchool() throws GameActionException {
+        for (int i = 1; i <= 1; i++) {
+            if (rc.getRoundNum() <= i) break;
+            Transaction[] tr = rc.getBlock(rc.getRoundNum() - i);
+            for (Transaction t : tr) {
+                int[] message = t.getMessage();
+                if (message[5] == sec1 && message[6] == sec2) {
+                    if (message[0] == 4) {
+                        numberDA++;
+                    }
+                } else {
+                    numMess++;
+                    averageEnemyMessageCost = (averageEnemyMessageCost + t.getCost()) / numMess;
+                }
+            }
+        }
         System.out.println(numberDA);
         if (numberDA < 24 && rc.getTeamSoup() > 220){
             for (Direction dir : directions) if(valid(rc.getLocation().add(dir))){
@@ -39,21 +54,6 @@ public class DesignSchool extends RobotPlayer{
                         numMess++;
                         averageEnemyMessageCost = (averageEnemyMessageCost + t.getCost()) / numMess;
                     }
-                }
-            }
-        }
-        for (int i = 1; i <= 1; i++) {
-            if (rc.getRoundNum() <= i) break;
-            Transaction[] tr = rc.getBlock(rc.getRoundNum() - i);
-            for (Transaction t : tr) {
-                int[] message = t.getMessage();
-                if (message[5] == sec1 && message[6] == sec2) {
-                    if (message[0] == 4) {
-                        numberDA++;
-                    }
-                } else {
-                    numMess++;
-                    averageEnemyMessageCost = (averageEnemyMessageCost + t.getCost()) / numMess;
                 }
             }
         }

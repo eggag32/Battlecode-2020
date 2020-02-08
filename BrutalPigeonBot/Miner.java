@@ -5,6 +5,169 @@ import java.util.*;
 
 public class Miner extends RobotPlayer{
 	static void runMiner() throws GameActionException {
+        if (turnCount == 1) {
+            int number = rc.getRoundNum();
+            for (int i = 2; i <= 700; i++) {
+                if (number <= i) break;
+                Transaction[] tr = rc.getBlock(number - i);
+                for (Transaction t : tr) {
+                    int[] message = t.getMessage();
+                    if(message[5] == sec1 && message[6] == sec2){ //it is a valid message
+                        if(message[0] == 1) {
+                            if(message[3] >= 1) { //not worth going if there is too little soup
+                                int one = message[1] - sec3;
+                                int two = message[2] - sec4;
+                                if (valid(new MapLocation(one, two)) && hasSoup[one][two] == 0) {
+                                    MapLocation locsoup = new MapLocation(one, two);
+                                    soups.add(locsoup);
+                                    hasSoup[one][two] = 1;
+                                }
+                            }
+                        } else if (message[0] == 2) {
+                            HQLoc = new MapLocation(message[1] - sec3, message[2] - sec4);
+                            knowHQ = true;
+                            for (Direction dir : directions) {
+                                MapLocation nLoc = HQLoc.add(dir);
+                                System.out.println(dir);
+                                if(valid(nLoc)){
+                                    bad[nLoc.x][nLoc.y] = true; //don't build anything on here, since we will build the wall here
+                                    for(Direction dir1 : directions){
+                                        MapLocation nLoc1 = nLoc.add(dir1);
+                                        if(valid(nLoc1)) alsobad[nLoc1.x][nLoc1.y] = true;
+                                    }
+                                }
+                            }
+                        } else if (message[0] == 6) {
+                            if(!explored[message[1] - sec3]) {
+                                explored[message[1] - sec3] = true;
+                                cornersExplored++;
+                            }
+                        } else if (message[0] == 7) {
+                            if (!hasRefinery[message[1] - sec3][message[2] - sec4]) {
+                                MapLocation mploc = new MapLocation(message[1] - sec3, message[2] - sec4);
+                                refineries.add(mploc);
+                                hasRefinery[message[1] - sec3][message[2] - sec4] = true;
+                            }
+                        } else if (message[0] == 8) {
+                            int one = message[1] - sec3;
+                            int two = message[2] - sec4;
+                            hasSoup[one][two] = 3;
+                        } else if (message[0] == 9) {
+                            int one = message[1] - sec3;
+                            int two = message[2] - sec4;
+                            if (!hasDA[one][two]) {
+                                hasDA[one][two] = true;
+                                countDA++;
+                            }
+                        }
+                        else if(message[0] == 12){
+                            int one = message[1] - sec3;
+                            int two = message[2] - sec4;
+                            if (!hasDF[one][two]) {
+                                hasDF[one][two] = true;
+                                countDF++;
+                            }
+                        }
+                        else if(message[0] == 20) numVap++;
+                        else if(message[0] == 23) numDF++;
+                        else if(message[0] == 101) wallBuilt = true;
+                        else if(message[0] == 105){
+                            int x1 = message[1] - sec3;
+                            int y1 = message[2] - sec4;
+                            if(!haveEarlyVap[x1][y1]){
+                                earlyVap++;
+                                haveEarlyVap[x1][y1] = true;
+                            }
+                        }
+                    } else {
+                        numMess++;
+                        averageEnemyMessageCost = (averageEnemyMessageCost + t.getCost()) / numMess;
+                    }
+                }
+            }
+        }
+        for (int i = 1; i <= 1; i++) {
+            if (rc.getRoundNum() <= i) break;
+            Transaction[] tr = rc.getBlock(rc.getRoundNum() - i);
+            for (Transaction t : tr) {
+                int[] message = t.getMessage();
+                if (message[5] == sec1 && message[6] == sec2) {
+                    if (message[0] == 1) {
+                        if (message[3] >= 1) {
+                            int one = message[1] - sec3;
+                            int two = message[2] - sec4;
+                            if (hasSoup[one][two] == 0) {
+                                MapLocation locsoup = new MapLocation(one, two);
+                                soups.add(locsoup);
+                                hasSoup[one][two] = 1;
+                            }
+                        }
+                    } else if (message[0] == 2) {
+                        HQLoc = new MapLocation(message[1] - sec3, message[2] - sec4);
+                        knowHQ = true;
+                        for (Direction dir : directions) {
+                            MapLocation nLoc = HQLoc.add(dir);
+                            if(valid(nLoc)){
+                                bad[nLoc.x][nLoc.y] = true; //don't build anything on here, since we will build the wall here
+                                for(Direction dir1 : directions){
+                                    MapLocation nLoc1 = nLoc.add(dir1);
+                                    if(valid(nLoc1)) alsobad[nLoc1.x][nLoc1.y] = true;
+                                }
+                            }
+                        }
+                    } else if (message[0] == 6) {
+                        if(!explored[message[1] - sec3]) {
+                            explored[message[1] - sec3] = true;
+                            cornersExplored++;
+                        }
+                    } else if (message[0] == 7) {
+                        if (!hasRefinery[message[1] - sec3][message[2] - sec4]) {
+                            MapLocation mploc = new MapLocation(message[1] - sec3, message[2] - sec4);
+                            refineries.add(mploc);
+                            hasRefinery[message[1] - sec3][message[2] - sec4] = true;
+                        }
+                    } else if (message[0] == 8) {
+                        int one = message[1] - sec3;
+                        int two = message[2] - sec4;
+                        hasSoup[one][two] = 3;
+                    } else if (message[0] == 9) {
+                        int one = message[1] - sec3;
+                        int two = message[2] - sec4;
+                        if (!hasDA[one][two]) {
+                            hasDA[one][two] = true;
+                            countDA++;
+                        }
+                    }
+                    else if(message[0] == 12){
+                        int one = message[1] - sec3;
+                        int two = message[2] - sec4;
+                        if (!hasDF[one][two]) {
+                            hasDF[one][two] = true;
+                            countDF++;
+                        }
+                    }
+                    else if(message[0] == 20) numVap++;
+                    else if(message[0] == 23) numDF++;
+                    else if(message[0] == 101) wallBuilt = true;
+                    else if(message[0] == 105){
+                        int x1 = message[1] - sec3;
+                        int y1 = message[2] - sec4;
+                        if(!haveEarlyVap[x1][y1]){
+                            earlyVap++;
+                            haveEarlyVap[x1][y1] = true;
+                        }
+                    }
+                } else {
+                    numMess++;
+                    averageEnemyMessageCost = (averageEnemyMessageCost + t.getCost()) / numMess;
+                }
+            }
+        }
+	    if(rc.getRoundNum() > 1400 && occupation != "vaporator builder"){
+	        //what are u doing, my friend?
+            //rip
+            rc.disintegrate(); //(getting in the way of the builder)
+        }
         System.out.println("DAs: " + countDA);
         System.out.println("I am " + occupation);
         vs[rc.getLocation().x][rc.getLocation().y] = rc.getRoundNum();
@@ -24,7 +187,7 @@ public class Miner extends RobotPlayer{
         }
         if (turnCount == 1) HQLoc = new MapLocation(-1, -1); //not the real location
         if (occupation == "none") {
-            if (cornersExplored < 4 && rc.getRoundNum() > 150 && rc.getRoundNum() < 200) { //only start exploring around the beginning of the game
+            if (cornersExplored < 4 && rc.getRoundNum() > 125 && rc.getRoundNum() < 150) { //only start exploring around the beginning of the game
                 occupation = "exploring";
                 int ch = 0;
                 if (!explored[0]){
@@ -58,11 +221,16 @@ public class Miner extends RobotPlayer{
                 if (cst > 0) {
                     rc.submitTransaction(message, cst);
                 }
-            } else if (countDA < 2 && rc.getRoundNum() > (10 + (Math.random() * 100)) && rc.getTeamSoup() > 200) { //if we already have some soup, build academies
+            }
+            else if(earlyVap < 4 && rc.getRoundNum() < 125 && rc.getTeamSoup() > 500){
+                occupation = "early vap";
+                 cnt = 0;
+            }
+            else if (countDA < 2 && rc.getRoundNum() > 100 + ((Math.random() * 100) / 2) && rc.getTeamSoup() > 200) { //if we already have some soup, build academies
                 occupation = "building a DA";
                 cnt = 0;
             }
-            else if(numVap < 3 && rc.getRoundNum() > (350 + (Math.random() * 100) * 3)){
+            else if(numVap < 3 && rc.getRoundNum() > (300 + (Math.random() * 100) * 3) && wallBuilt){
                occupation = "becoming free vap";
                cnt = 0;
             }
@@ -70,6 +238,52 @@ public class Miner extends RobotPlayer{
                 occupation = "need to find soup";
                 cnt = 0;
             }
+        }
+        else if(occupation == "early vap"){
+            if(rc.getLocation().distanceSquaredTo(HQLoc) > 18){
+                for(Direction dir : directions){
+                    if(tryBuild(RobotType.VAPORATOR, dir)){
+                        earlyVap++;
+                        haveEarlyVap[rc.getLocation().add(dir).x][rc.getLocation().add(dir).y] = true;
+                        int[] message = new int[7];
+                        message[5] = sec1; //for security
+                        message[6] = sec2; //for security
+                        message[0] = 105; //type, automatically means we built a new early vaporator
+                        message[3] = 468265245;
+                        message[1] = rc.getLocation().add(dir).x + sec3;
+                        message[2] = rc.getLocation().add(dir).y + sec4;
+                        message[4] = 342355342;
+                        int cst;
+                        if (numMess > 10) cst = Math.min(rc.getTeamSoup(), averageEnemyMessageCost + 1);
+                        else cst = Math.min(rc.getTeamSoup(), 1);
+                        if (cst > 0) {
+                            rc.submitTransaction(message, cst);
+                        }
+                        occupation = "none";
+                        break;
+                    }
+                }
+            }
+            if(occupation == "early vap"){
+                Direction next1 = rc.getLocation().directionTo(HQLoc).opposite();
+                if (!tryMove(next1)) {
+                    Direction l = next1.rotateLeft(), r = next1.rotateRight();
+                    for (int i = 0; i < 5; i++) {
+                        MapLocation ml = rc.getLocation().add(l);
+                        if (valid(ml))
+                            if (((rc.getRoundNum() - vs[ml.x][ml.y]) > 7 || (vs[ml.x][ml.y] == 0)) && tryMove(l))
+                                break;
+                        ml = rc.getLocation().add(r);
+                        if (valid(ml))
+                            if (((rc.getRoundNum() - vs[ml.x][ml.y]) > 7 || (vs[ml.x][ml.y] == 0)) && tryMove(r))
+                                break;
+                        l = l.rotateLeft();
+                        r = r.rotateRight();
+                    }
+                }
+                cnt++;
+            }
+            if(cnt > 10) occupation = "none";
         }
         else if(occupation == "becoming free vap"){
             boolean free = true;
@@ -83,8 +297,8 @@ public class Miner extends RobotPlayer{
                     break;
                 }
             }
-            if(numVap < 2) {
-                if (free && rc.getLocation().distanceSquaredTo(HQLoc) > 50) {
+            if(numVap < 3) {
+                if (free && rc.getLocation().distanceSquaredTo(HQLoc) < 50) {
                     occupation = "vaporator builder";
                     int[] message = new int[7];
                     message[5] = sec1; //for security
@@ -101,8 +315,7 @@ public class Miner extends RobotPlayer{
                         rc.submitTransaction(message, cst);
                     }
                 } else {
-                    //move way from HQ
-                    Direction next1 = rc.getLocation().directionTo(HQLoc).opposite();
+                    Direction next1 = rc.getLocation().directionTo(HQLoc);
                     if (!tryMove(next1)) {
                         Direction l = next1.rotateLeft(), r = next1.rotateRight();
                         for (int i = 0; i < 5; i++) {
@@ -134,10 +347,15 @@ public class Miner extends RobotPlayer{
                 }
             }
             if(waiting == 0){
-                for(Direction dir : directions) if(rc.isReady() && valid(rc.getLocation().add(dir)) && rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseElevation(rc.getLocation().add(dir)) >= 23) {
+                for(Direction dir : directions) if(rc.isReady() && valid(rc.getLocation().add(dir)) && rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseElevation(rc.getLocation().add(dir)) >= 22) {
                     MapLocation new1 = rc.getLocation().add(dir);
-                    if((new1.x + new1.y) % 2 == 0) tryBuild(RobotType.VAPORATOR, dir);
-                    else if(rc.getTeamSoup() > 600) tryBuild(RobotType.FULFILLMENT_CENTER, dir);
+                    if((new1.x + new1.y) % 2 == 0 && rc.getRoundNum() < 1900) tryBuild(RobotType.VAPORATOR, dir);
+                    else if(rc.getTeamSoup() > 600){
+                        if(!ngn) {
+                            if(tryBuild(RobotType.FULFILLMENT_CENTER, dir)) ngn = true;
+                        }
+                        else tryBuild(RobotType.NET_GUN, dir);
+                    }
                 }
             }
             else waiting--;
@@ -257,7 +475,11 @@ public class Miner extends RobotPlayer{
             if (minDist < 150) {
                 goal = best;
                 f = true;
-            } else {
+            }
+            else if(rc.getLocation().distanceSquaredTo(HQLoc) < 100 && !wallBuilt){
+                goal = HQLoc;
+                f = true;
+            }else {
                 for (Direction dir : directions)
                     if (dir != Direction.CENTER && valid(rc.getLocation().add(dir))) {
                         MapLocation loc = rc.getLocation().add(dir);
@@ -292,7 +514,7 @@ public class Miner extends RobotPlayer{
                 cnt = 0;
             }
             if (cnt >= 10) {
-                if (rc.getRoundNum() < 300 && knowHQ) {
+                if (!wallBuilt && knowHQ) {
                     occupation = "going to refinery";
                     goal = HQLoc;
                     cnt = 0;
@@ -301,51 +523,57 @@ public class Miner extends RobotPlayer{
             cnt++;
         }
         else if (occupation == "building a DA") {
-            boolean f = false;
-            for (Direction dir : directions) {
-                MapLocation loca = rc.getLocation().add(dir);
-                if (valid(loca) && rc.canSenseLocation(loca) && !bad[loca.x][loca.y] && cnt > 2 && !alsobad[loca.x][loca.y] && cnt > 5) {
-                    if (tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
-                        occupation = "none";
-                        cnt = 0;
-                        countDA++;
-                        hasDA[loca.x][loca.y] = true;
-                        //send a message of type 9
-                        int[] message = new int[7];
-                        message[5] = sec1; //for security
-                        message[6] = sec2; //for security
-                        message[0] = 9; //type
-                        message[1] = loca.x + sec3;
-                        message[2] = loca.y + sec4;
-                        message[3] = 1238943;
-                        message[4] = 47238782;
-                        int cst;
-                        if (numMess > 10) cst = Math.min(rc.getTeamSoup(), averageEnemyMessageCost + 1);
-                        else cst = Math.min(rc.getTeamSoup(), 1);
-                        if (cst > 0) rc.submitTransaction(message, cst);
-                        f = true;
-                        break;
-                    }
-                }
-            }
-            if (!f && knowHQ) {
-                Direction next1 = rc.getLocation().directionTo(HQLoc);
-                if(!tryMove(next1)){
-                    Direction l = next1.rotateLeft(), r = next1.rotateRight();
-                    for(int i = 0; i < 5; i++){
-                        MapLocation ml = rc.getLocation().add(l);
-                        if(valid(ml)) if(((rc.getRoundNum() - vs[ml.x][ml.y]) > 7 || (vs[ml.x][ml.y] == 0)) && tryMove(l)) break;
-                        ml = rc.getLocation().add(r);
-                        if(valid(ml)) if(((rc.getRoundNum() - vs[ml.x][ml.y]) > 7 || (vs[ml.x][ml.y] == 0)) && tryMove(r)) break;
-                        l = l.rotateLeft();
-                        r = r.rotateRight();
-                    }
-                }
-                cnt++;
-            }
             if(cnt > 10 || countDA >= 2) {
                 occupation = "none";
                 cnt = 0;
+            }
+            else {
+                boolean f = false;
+                for (Direction dir : directions) {
+                    MapLocation loca = rc.getLocation().add(dir);
+                    if (valid(loca) && rc.canSenseLocation(loca) && !bad[loca.x][loca.y] && cnt > 2 && !alsobad[loca.x][loca.y] && cnt > 5) {
+                        if (tryBuild(RobotType.DESIGN_SCHOOL, dir)) {
+                            occupation = "none";
+                            cnt = 0;
+                            countDA++;
+                            hasDA[loca.x][loca.y] = true;
+                            //send a message of type 9
+                            int[] message = new int[7];
+                            message[5] = sec1; //for security
+                            message[6] = sec2; //for security
+                            message[0] = 9; //type
+                            message[1] = loca.x + sec3;
+                            message[2] = loca.y + sec4;
+                            message[3] = 1238943;
+                            message[4] = 47238782;
+                            int cst;
+                            if (numMess > 10) cst = Math.min(rc.getTeamSoup(), averageEnemyMessageCost + 1);
+                            else cst = Math.min(rc.getTeamSoup(), 1);
+                            if (cst > 0) rc.submitTransaction(message, cst);
+                            f = true;
+                            break;
+                        }
+                    }
+                }
+                if (!f && knowHQ) {
+                    Direction next1 = rc.getLocation().directionTo(HQLoc);
+                    if (!tryMove(next1)) {
+                        Direction l = next1.rotateLeft(), r = next1.rotateRight();
+                        for (int i = 0; i < 5; i++) {
+                            MapLocation ml = rc.getLocation().add(l);
+                            if (valid(ml))
+                                if (((rc.getRoundNum() - vs[ml.x][ml.y]) > 7 || (vs[ml.x][ml.y] == 0)) && tryMove(l))
+                                    break;
+                            ml = rc.getLocation().add(r);
+                            if (valid(ml))
+                                if (((rc.getRoundNum() - vs[ml.x][ml.y]) > 7 || (vs[ml.x][ml.y] == 0)) && tryMove(r))
+                                    break;
+                            l = l.rotateLeft();
+                            r = r.rotateRight();
+                        }
+                    }
+                    cnt++;
+                }
             }
         }
         else if (occupation == "exploring") { //DONE!!!
@@ -379,7 +607,7 @@ public class Miner extends RobotPlayer{
                             }
                         }
                 }
-                if (cnt >= 20 || (rc.getLocation().x == goal.x && rc.getLocation().y == goal.y) || rc.getRoundNum() > 220) {
+                if (cnt >= 25 || (rc.getLocation().x == goal.x && rc.getLocation().y == goal.y) || rc.getRoundNum() > 220) {
                     occupation = "none";
                     cnt = 0;
                 }
@@ -407,146 +635,6 @@ public class Miner extends RobotPlayer{
                 cnt = 0;
             }
             if(occupation == "need to find soup") cnt++;
-        }
-        if (turnCount == 1) {
-            int number = rc.getRoundNum();
-            for (int i = 2; i <= 700; i++) {
-                if (number <= i) break;
-                Transaction[] tr = rc.getBlock(number - i);
-                for (Transaction t : tr) {
-                    int[] message = t.getMessage();
-                    if(message[5] == sec1 && message[6] == sec2){ //it is a valid message
-                        if(message[0] == 1) {
-                            if(message[3] >= 1) { //not worth going if there is too little soup
-                                int one = message[1] - sec3;
-                                int two = message[2] - sec4;
-                                if (valid(new MapLocation(one, two)) && hasSoup[one][two] == 0) {
-                                    MapLocation locsoup = new MapLocation(one, two);
-                                    soups.add(locsoup);
-                                    hasSoup[one][two] = 1;
-                                }
-                            }
-                        } else if (message[0] == 2) {
-                            HQLoc = new MapLocation(message[1] - sec3, message[2] - sec4);
-                            knowHQ = true;
-                            for (Direction dir : directions) {
-                                MapLocation nLoc = HQLoc.add(dir);
-                                System.out.println(dir);
-                                if(valid(nLoc)){
-                                    bad[nLoc.x][nLoc.y] = true; //don't build anything on here, since we will build the wall here
-                                    for(Direction dir1 : directions){
-                                        MapLocation nLoc1 = nLoc.add(dir1);
-                                        if(valid(nLoc1)) alsobad[nLoc1.x][nLoc1.y] = true;
-                                    }
-                                }
-                            }
-                        } else if (message[0] == 6) {
-                            if(!explored[message[1] - sec3]) {
-                                explored[message[1] - sec3] = true;
-                                cornersExplored++;
-                            }
-                        } else if (message[0] == 7) {
-                            if (!hasRefinery[message[1] - sec3][message[2] - sec4]) {
-                                MapLocation mploc = new MapLocation(message[1] - sec3, message[2] - sec4);
-                                refineries.add(mploc);
-                                hasRefinery[message[1] - sec3][message[2] - sec4] = true;
-                            }
-                        } else if (message[0] == 8) {
-                            int one = message[1] - sec3;
-                            int two = message[2] - sec4;
-                            hasSoup[one][two] = 3;
-                        } else if (message[0] == 9) {
-                            int one = message[1] - sec3;
-                            int two = message[2] - sec4;
-                            if (!hasDA[one][two]) {
-                                hasDA[one][two] = true;
-                                countDA++;
-                            }
-                        }
-                        else if(message[0] == 12){
-                            int one = message[1] - sec3;
-                            int two = message[2] - sec4;
-                            if (!hasDF[one][two]) {
-                                hasDF[one][two] = true;
-                                countDF++;
-                            }
-                        }
-                        else if(message[0] == 20) numVap++;
-                        else if(message[0] == 23) numDF++;
-                    } else {
-                        numMess++;
-                        averageEnemyMessageCost = (averageEnemyMessageCost + t.getCost()) / numMess;
-                    }
-                }
-            }
-        }
-        for (int i = 1; i <= 1; i++) {
-            if (rc.getRoundNum() <= i) break;
-            Transaction[] tr = rc.getBlock(rc.getRoundNum() - i);
-            for (Transaction t : tr) {
-                int[] message = t.getMessage();
-                if (message[5] == sec1 && message[6] == sec2) {
-                    if (message[0] == 1) {
-                        if (message[3] >= 1) {
-                            int one = message[1] - sec3;
-                            int two = message[2] - sec4;
-                            if (hasSoup[one][two] == 0) {
-                                MapLocation locsoup = new MapLocation(one, two);
-                                soups.add(locsoup);
-                                hasSoup[one][two] = 1;
-                            }
-                        }
-                    } else if (message[0] == 2) {
-                        HQLoc = new MapLocation(message[1] - sec3, message[2] - sec4);
-                        knowHQ = true;
-                        for (Direction dir : directions) {
-                            MapLocation nLoc = HQLoc.add(dir);
-                            if(valid(nLoc)){
-                                bad[nLoc.x][nLoc.y] = true; //don't build anything on here, since we will build the wall here
-                                for(Direction dir1 : directions){
-                                    MapLocation nLoc1 = nLoc.add(dir1);
-                                    if(valid(nLoc1)) alsobad[nLoc1.x][nLoc1.y] = true;
-                                }
-                            }
-                        }
-                    } else if (message[0] == 6) {
-                        if(!explored[message[1] - sec3]) {
-                            explored[message[1] - sec3] = true;
-                            cornersExplored++;
-                        }
-                    } else if (message[0] == 7) {
-                        if (!hasRefinery[message[1] - sec3][message[2] - sec4]) {
-                            MapLocation mploc = new MapLocation(message[1] - sec3, message[2] - sec4);
-                            refineries.add(mploc);
-                            hasRefinery[message[1] - sec3][message[2] - sec4] = true;
-                        }
-                    } else if (message[0] == 8) {
-                        int one = message[1] - sec3;
-                        int two = message[2] - sec4;
-                        hasSoup[one][two] = 3;
-                    } else if (message[0] == 9) {
-                        int one = message[1] - sec3;
-                        int two = message[2] - sec4;
-                        if (!hasDA[one][two]) {
-                            hasDA[one][two] = true;
-                            countDA++;
-                        }
-                    }
-                    else if(message[0] == 12){
-                        int one = message[1] - sec3;
-                        int two = message[2] - sec4;
-                        if (!hasDF[one][two]) {
-                            hasDF[one][two] = true;
-                            countDF++;
-                        }
-                    }
-                    else if(message[0] == 20) numVap++;
-                    else if(message[0] == 23) numDF++;
-                } else {
-                    numMess++;
-                    averageEnemyMessageCost = (averageEnemyMessageCost + t.getCost()) / numMess;
-                }
-            }
         }
     }
 }

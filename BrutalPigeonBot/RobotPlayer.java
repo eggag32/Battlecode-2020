@@ -37,7 +37,7 @@ public strictfp class RobotPlayer {
     static int turnCount;
     static int height, width;
     static int averageEnemyMessageCost = 0, numMess = 0;
-    static int sec1 = 282476523, sec2 = 783634534, sec3 = 6482562, sec4 = 423452;
+    static int sec1 = 28276523, sec2 = 78363534, sec3 = 648562, sec4 = 42452;
 
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
@@ -57,6 +57,7 @@ public strictfp class RobotPlayer {
         hasDA = new boolean[width + 1][height + 1]; //for the wall stuff
         hasDF = new boolean[width + 1][height + 1]; //for the wall stuff
         nosoup = new boolean[width + 1][height + 1]; //for the wall stuff
+        haveEarlyVap = new boolean[width + 1][height + 1];
         explored = new boolean[10];
 
         while (true) {
@@ -102,10 +103,12 @@ public strictfp class RobotPlayer {
 
     static int numberMiners = 0;
     static int minersDemand = 6; //for the dirt people academy and start
+    static boolean wallBuilt = false;
 
     static boolean[][] bad, hasRefinery, vis, hasDA, hasDF, nosoup, alsobad, gd, taken;
     static boolean[] explored;
     static int[][] hasSoup, vs;
+    static boolean[][] haveEarlyVap;
     static Direction soupdir;
     static MapLocation goal, HQLoc;
     static String occupation = "none";
@@ -114,7 +117,8 @@ public strictfp class RobotPlayer {
     static ArrayList<MapLocation> soups = new ArrayList<>(); //store all known refineries here (refinery messages are type 5)
     static int numVap = 0, numDF = 0;
     static int waiting = Integer.MAX_VALUE;
-    static boolean building = false;
+    static boolean building = false, ngn = false;
+    static int earlyVap = 0;
 
     static boolean valid(MapLocation m) {
         return ((m.x >= 0 && m.x < width) && (m.y >= 0 && m.y < height));
@@ -148,6 +152,7 @@ public strictfp class RobotPlayer {
     static ArrayList<MapLocation> miners = new ArrayList<>();
     static boolean haveRequest = false, mining = false, digging = false;
     static MapLocation dest;
+    static  boolean foundIt = false;
 
     static String DroneStatus = "going to HQ";
     static MapLocation theirHQLoc;

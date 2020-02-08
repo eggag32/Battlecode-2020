@@ -94,6 +94,51 @@ public class HQ extends RobotPlayer{
                 rc.submitTransaction(message, cst);
             }
         }
+        //we check our surroundings to see if the wall has been built and send the message to the helpers
+        if(!wallBuilt) {
+            int minHeight = Integer.MAX_VALUE;
+            for (Direction dir : directions) if (valid(rc.getLocation().add(dir))) {
+                //check the height of every valid surrounding location
+                if (rc.canSenseLocation(rc.getLocation().add(dir))) {
+                    minHeight = Math.min(minHeight, rc.senseElevation(rc.getLocation().add(dir)));
+                }
+            }
+            if(minHeight >= 8){
+                wallBuilt = true;
+                int[] message = new int[7];
+                message[5] = sec1; //for security
+                message[6] = sec2; //for security
+                message[0] = 101; //means the wall is finished
+                message[1] = 2743 + sec3; //the x
+                message[2] = 5743 + sec4; //the y
+                message[3] = 0;
+                message[4] = 0; //don't need for this kind of message
+                int cst;
+                if (averageEnemyMessageCost != 0) cst = Math.min(rc.getTeamSoup(), averageEnemyMessageCost + 1);
+                else cst = Math.min(rc.getTeamSoup(), 1);
+                if (cst > 0) {
+                    rc.submitTransaction(message, cst);
+                }
+            }
+        }
+        else {
+            if (turnCount % 400 == 1) {
+                int[] message = new int[7];
+                message[5] = sec1; //for security
+                message[6] = sec2; //for security
+                message[0] = 101; //type
+                message[1] = 2743 + sec3; //the x
+                message[2] = 5743 + sec4; //the y
+                message[3] = 0;
+                message[4] = 0; //don't need for this kind of message
+                int cst;
+                if (averageEnemyMessageCost != 0) cst = Math.min(rc.getTeamSoup(), averageEnemyMessageCost + 1);
+                else cst = Math.min(rc.getTeamSoup(), 1);
+                if (cst > 0) {
+                    rc.submitTransaction(message, cst);
+                }
+            }
+        }
         RobotInfo[] RI = rc.senseNearbyRobots();
         for (RobotInfo ri : RI) {
             if (ri.team == rc.getTeam().opponent() && ri.type == RobotType.DELIVERY_DRONE && rc.canShootUnit(ri.ID) && rc.isReady()) {
